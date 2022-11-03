@@ -12,4 +12,4 @@ test:
 	# Insert the module
 	sudo insmod labos2.ko
 	# Display the kernel log
-	dmesg
+	sudo dmesg
