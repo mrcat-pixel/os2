@@ -12,12 +12,14 @@ MODULE_DESCRIPTION("labOS2 kernel module");
 MODULE_VERSION("1.0");
 
 static struct task_struct* get_task_struct_by_pid(pid_t pid) {
-    return get_pid_task(find_get_pid(pid), PIDTYPE_PID)
+    return get_pid_task(find_get_pid(pid), PIDTYPE_PID);
 }
 
 static int __init kmod_init(void) {
+    struct task_struct* ts;
+    
     printk(KERN_INFO "labos2: module loading\n");
-    struct task_struct* ts = get_task_struct_by_pid(1);
+    ts = get_task_struct_by_pid(1);
     printk(KERN_INFO "labos2: test pid is %d\n", ts->pid);
     return 0;
 }
