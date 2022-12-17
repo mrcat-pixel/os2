@@ -9,7 +9,9 @@
 #include <linux/types.h>
 #include <asm/uaccess.h>
 
-#define PROCFS_NAME "labOS2"
+// ------------------------------------------------------------
+// GETTING STRUCTURES
+// ------------------------------------------------------------
 
 static struct task_struct* ts;
 static struct net_device* nd;
@@ -24,6 +26,10 @@ static struct task_struct* get_task_struct_by_pid(const pid_t pid) {
 static struct net_device* get_net_device_by_name(const char* name) {
     return dev_get_by_name(&init_net, name);
 }
+
+// ------------------------------------------------------------
+// OUTPUT TO PROCFS
+// ------------------------------------------------------------
 
 static int output_task_struct(struct seq_file* m, void* v) {
     printk(KERN_INFO "labOS2: trying to display task struct info\n");
@@ -46,7 +52,11 @@ static int output_net_device(struct seq_file* m, void* v) {
     printk(KERN_INFO "labOS2: trying to display net device info\n");
     if (nd) {
         seq_printf(m, "net_device:\n");
-        seq_printf(m, "name  = %s\n",  nd->name);
+        seq_printf(m, "name         = %s\n",  nd->name);
+        seq_printf(m, "mem_start    = %ld\n", nd->mem_start);
+        seq_printf(m, "mem_end      = %ld\n", nd->mem_end);
+        seq_printf(m, "base_addr    = %ld\n", nd->base_addr);
+        seq_printf(m, "irq          = %d\n",  nd->irq);
         return 0;
     }
     else {
@@ -72,6 +82,12 @@ static int proc_open(struct inode* inode, struct file* file) {
     return single_open(file, output, NULL);
 }
 
+// ------------------------------------------------------------
+// PROCFS INIT
+// ------------------------------------------------------------
+
+#define PROCFS_NAME "labOS2"
+
 static const struct proc_ops proc_fops = {
     .proc_open = proc_open,
     .proc_read = seq_read,
@@ -89,6 +105,10 @@ static int create_proc_file(void) {
     return 0;
 }
 
+// ------------------------------------------------------------
+// INIT AND END
+// ------------------------------------------------------------
+
 static int __init kmod_init(void) {
     printk(KERN_INFO "labOS2: module loading\n");
 
@@ -103,7 +123,7 @@ static int __init kmod_init(void) {
     mode = 2;
 
     ts = get_task_struct_by_pid(1);
-    nd = get_net_device_by_name("enp0s2");
+    nd = get_net_device_by_name("lo");
 
     return 0;
 }
@@ -114,7 +134,9 @@ static void __exit kmod_exit(void) {
     printk(KERN_INFO "labOS2: module unloaded\n");
 }
 
-//------------------------------------------------------------
+// ------------------------------------------------------------
+// INFO
+// ------------------------------------------------------------
 
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_AUTHOR("pixelcat");
