@@ -33,20 +33,30 @@ static struct net_device* get_net_device_by_name(const char* name) {
 char* message;
 static int mode = 0;
 
+#define MODE_PID 1
+#define MODE_DEVICE 2
+
 static int allocate_message_memory(void) {
     message = kmalloc(50*sizeof(char), GFP_KERNEL);
     if (message) return 0;
     return -1;
 }
 
+static void clear_message_buffer(void) {
+    int i;
+    for (i = 0; i < 50; i++) {
+        message[i] = 0;
+    }
+}
+
 static int set_mode(void) {
     if (!message[0]) return -1;
     switch (message[0]) {
         case 'p':
-            mode = 1;
+            mode = MODE_PID;
             return 0;
         case 'd':
-            mode = 2;
+            mode = MODE_DEVICE;
             return 0;
         default:
             mode = 0;
@@ -84,24 +94,23 @@ static void handle_input(void) {
         return;
     }
 
-    printk(KERN_INFO "labOS2: Set output mode to %d\n", mode);
-
     switch (mode) {
-        case 1:
+        case MODE_PID:
             set_task_struct();
             break;
-        case 2:
+        case MODE_DEVICE:
             set_net_device();
             break;
     }
 }
 
 static ssize_t proc_write(struct file* filp, const char* buf, size_t count, loff_t* offp) {
+    printk(KERN_INFO "labOS2: Write function called.\n");
+    clear_message_buffer();
     if (copy_from_user(message, buf, count) != 0) {
         printk(KERN_WARNING "labOS2: Couldn't read input!\n");
         return count;
     }
-    printk(KERN_INFO "labOS2: Retrieved message: %s\n", message);
     handle_input();
     return count;
 }
@@ -111,7 +120,6 @@ static ssize_t proc_write(struct file* filp, const char* buf, size_t count, loff
 // ------------------------------------------------------------
 
 static int output_task_struct(struct seq_file* m, void* v) {
-    printk(KERN_INFO "labOS2: Trying to display task_struct info...\n");
     if (ts) {
         seq_printf(m, "task_struct:\n"                              );
         seq_printf(m, "pid          = %d\n",        ts->pid         );
@@ -128,7 +136,6 @@ static int output_task_struct(struct seq_file* m, void* v) {
 }
 
 static int output_net_device(struct seq_file* m, void* v) {
-    printk(KERN_INFO "labOS2: Trying to display net_device info...\n");
     if (nd) {
         seq_printf(m, "net_device:\n"                               );
         seq_printf(m, "name         = %s\n",        nd->name        );
@@ -148,9 +155,9 @@ static int output_net_device(struct seq_file* m, void* v) {
 static int output(struct seq_file* m, void* v) {
     printk(KERN_INFO "labOS2: Output function called.\n");
     switch (mode) {
-        case 1:
+        case MODE_PID:
             return output_task_struct(m, v);
-        case 2:
+        case MODE_DEVICE:
             return output_net_device(m, v);
         default:
             seq_printf(m, "Input not set!\n");
@@ -194,15 +201,14 @@ static int create_proc_file(void) {
 static int __init kmod_init(void) {
     printk(KERN_INFO "labOS2: Module loading...\n");
 
-    printk(KERN_INFO "labOS2: Attempting to create procfs file...\n");
     if (create_proc_file() != 0) {
         printk(KERN_ALERT "labOS2: Couldn't make /proc/%s\n", PROCFS_NAME);
         return -ENOMEM;
     }
-    printk(KERN_INFO "labOS2: /proc/%s created\n", PROCFS_NAME);	
+    printk(KERN_INFO "labOS2: /proc/%s created\n", PROCFS_NAME);
 
-    printk(KERN_INFO "labOS2: Attempting to allocate memory for incoming messages...\n");
     if (allocate_message_memory() != 0) {
+        remove_proc_entry(PROCFS_NAME, NULL);
         printk(KERN_ALERT "labOS2: Couldn't allocate memory\n");
         return -1;
     }
@@ -215,9 +221,7 @@ static void __exit kmod_exit(void) {
     printk(KERN_INFO "labOS2: Unloading module...\n");
 
     kfree(message);
-	printk(KERN_INFO "labOS2: Allocated memory freed\n");
     remove_proc_entry(PROCFS_NAME, NULL);
-	printk(KERN_INFO "labOS2: /proc/%s removed\n", PROCFS_NAME);
 
     printk(KERN_INFO "labOS2: Module unloaded\n");
 }
