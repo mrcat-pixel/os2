@@ -142,10 +142,10 @@ static int output_task_struct(struct seq_file *m, void *v)
     if (ts)
     {
         seq_printf(m, "task_struct:\n");
-        seq_printf(m, "pid          = %d\n", ts->pid);
-        seq_printf(m, "tgid         = %d\n", ts->tgid);
-        seq_printf(m, "state        = %ld\n", ts->state);
-        seq_printf(m, "flags        = %d\n", ts->flags);
+        seq_printf(m, "pid          = %d\n",    ts->pid);
+        seq_printf(m, "tgid         = %d\n",    ts->tgid);
+        seq_printf(m, "state        = %ld\n",   ts->state);
+        seq_printf(m, "flags        = %d\n",    ts->flags);
         printk(KERN_INFO "labOS2: task_struct info displayed successfully.\n");
     }
     else
@@ -161,11 +161,9 @@ static int output_net_device(struct seq_file *m, void *v)
     if (nd)
     {
         seq_printf(m, "net_device:\n");
-        seq_printf(m, "name         = %s\n", nd->name);
-        seq_printf(m, "mem_start    = %ld\n", nd->mem_start);
-        seq_printf(m, "mem_end      = %ld\n", nd->mem_end);
-        seq_printf(m, "base_addr    = %ld\n", nd->base_addr);
-        seq_printf(m, "irq          = %d\n", nd->irq);
+        seq_printf(m, "name         = %s\n",    nd->name);
+        seq_printf(m, "flags        = %d\n",    nd->flags);
+        seq_printf(m, "state        = %ld\n",   nd->state);
         printk(KERN_INFO "labOS2: task_struct info displayed successfully.\n");
     }
     else
